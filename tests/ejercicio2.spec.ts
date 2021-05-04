@@ -1,51 +1,21 @@
 import 'mocha';
 import {expect} from 'chai';
-import {execSync} from 'child_process';
+import {EventEmitter} from 'events';
+// eslint-disable-next-line max-len
+import {RequestEventEmitterServer} from '../src/server/RequestEventEmitterServer';
 
-const test = (args :string) => {
-  return execSync(`node dist/ejercicio2/appWithPipe.js get ${args}`).toString();
-};
+describe('MessageEventEmitterClient', () => {
+  it('Should emit a message event once it gets a complete message', (done) => {
+    const socket = new EventEmitter();
+    const client = new RequestEventEmitterServer(socket);
 
-const test2 = (args :string) => {
-  // eslint-disable-next-line max-len
-  return execSync(`node dist/ejercicio2/appWithoutPipe.js get ${args}`).toString();
-};
+    client.on('message', (message) => {
+      expect(message).to.be.eql({'type': 'change', 'prev': 13, 'curr': 26});
+    });
 
-
-describe(('EJ2: wc'), () => {
-  it(('Muestra número de líneas withPipe'), () => {
-    expect(test(`--file="helloworld.txt" --option="l"`)).to.equal(
-        `Great! We can execute!\nhelloworld.txt has 3 lines\n`,
-    );
-  });
-
-  it(('Muestra número de caracteres  withPipe'), () => {
-    expect(test(`--file="helloworld.txt" --option="c"`)).to.equal(
-        `Great! We can execute!\nhelloworld.txt has 21 characters\n`,
-    );
-  });
-
-  it(('Muestra número de palabras  withPipe'), () => {
-    expect(test(`--file="helloworld.txt" --option="w"`)).to.equal(
-        `Great! We can execute!\nhelloworld.txt has 6 words\n`,
-    );
-  });
-
-  it(('Muestra número de líneas withoutPipe'), () => {
-    expect(test2(`--file="helloworld.txt" --option="l"`)).to.equal(
-        `Great! We can execute!\nhelloworld.txt has 3 lines\n`,
-    );
-  });
-
-  it(('Muestra número de caracteres withoutPipe'), () => {
-    expect(test2(`--file="helloworld.txt" --option="c"`)).to.equal(
-        `Great! We can execute!\nhelloworld.txt has 21 characters\n`,
-    );
-  });
-
-  it(('Muestra número de palabras withoutPipe'), () => {
-    expect(test2(`--file="helloworld.txt" --option="w"`)).to.equal(
-        `Great! We can execute!\nhelloworld.txt has 6 words\n`,
-    );
+    socket.emit('data', '{"type": "change", "prev": 13');
+    socket.emit('data', ', "curr": 26}');
+    socket.emit('data', '\n');
+    done();
   });
 });

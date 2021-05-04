@@ -29,9 +29,15 @@ const server = net.createServer((connection) => {
             request.title,
         ));
         break;
+      case 'remove':
+        connection.write(notes.removeNote(
+            request.user,
+            request.title,
+        ));
+        break;
       default:
         connection.write(notes.listNotes(
-          request.user,
+            request.user,
         ));
         break;
     }

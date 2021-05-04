@@ -147,17 +147,33 @@ export class Notes {
   listNotes(username :string) {
     if (fs.existsSync(`./notes/${username}`)) {
       console.log(chalk.white.inverse('Your notes:'));
-      let list = '';
+
+      const ResponseNotesJson :NotesJson[] = [];
       fs.readdirSync(`./notes/${username}/`).forEach((note) => {
+        const ResponseNoteJson :NotesJson = {
+          user: '',
+          title: '',
+        };
         const data = fs.readFileSync(`./notes/${username}/${note}`);
         const JsonNote = JSON.parse(data.toString());
-        list = list + JsonNote.title + '\n';
+        ResponseNoteJson.title = `${JsonNote.title}`;
+        ResponseNoteJson.color = `${JsonNote.color}`;
+        ResponseNotesJson.push(ResponseNoteJson);
         this.consolelogColor(`- ${JsonNote.title}`, JsonNote.color);
       });
-      return list;
+      const ResponseJson :ResponseType = {
+        type: 'list',
+        success: true,
+        notes: ResponseNotesJson,
+      };
+      return JSON.stringify(ResponseJson);
     } else {
+      const ResponseJson :ResponseType = {
+        type: 'list',
+        success: false,
+      };
       console.log(`That user doesn´t exist`);
-      return 'User doesnt exist';
+      return JSON.stringify(ResponseJson);
     }
   }
 
@@ -171,10 +187,18 @@ export class Notes {
     if (fs.existsSync(`./notes/${username}/${title}`)) {
       console.log('Note removed!');
       fs.rmSync(`./notes/${username}/${title}`);
-      return `Note removed!`;
+      const ResponseJson :ResponseType = {
+        type: 'remove',
+        success: true,
+      };
+      return JSON.stringify(ResponseJson);
     } else {
       console.log(`No note found`);
-      return `No note found`;
+      const ResponseJson :ResponseType = {
+        type: 'remove',
+        success: false,
+      };
+      return JSON.stringify(ResponseJson);
     }
   }
 

@@ -3,7 +3,38 @@ import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 import {RequestType, ResponseType} from '../types';
 
+
+function consolelogColor(
+    text :string, color :string, inverse :boolean = false,
+) {
+  switch (color) {
+    case 'blue':
+      console.log(
+        (inverse) ? chalk.blue.inverse(text) : chalk.blue(text),
+      );
+      break;
+    case 'yellow':
+      console.log(
+        (inverse) ? chalk.yellow.inverse(text) : chalk.yellow(text),
+      );
+      break;
+    case 'red':
+      console.log(
+        (inverse) ? chalk.red.inverse(text) : chalk.red(text),
+      );
+      break;
+    case 'green':
+      console.log(
+        (inverse) ? chalk.green.inverse(text) : chalk.green(text),
+      );
+      break;
+  }
+}
+
 const socket = net.connect({port: 60300});
+socket.on('error', () => {
+  console.log(`Error with server`);
+});
 
 socket.on('data', (data) => {
   const ResponseData :ResponseType = JSON.parse(data.toString());
@@ -24,11 +55,41 @@ socket.on('data', (data) => {
         console.log(
             chalk.green(`Note ${ResponseData.notes![0].title} read correctly`),
         );
-        console.log(
+        consolelogColor(
+          ResponseData.notes![0].title,
+          ResponseData.notes![0].color!,
+          true,
+        );
+        consolelogColor(
             `${ResponseData.notes![0].body}`,
+            `${ResponseData.notes![0].color}`,
         );
       } else {
         console.log(chalk.red(`Note not found`));
+      }
+      break;
+    case 'list':
+      if ( ResponseData.success) {
+        console.log(
+            chalk.green(`Notes read correctly`),
+        );
+        console.log(
+            chalk.white.inverse(`Your notes`),
+        );
+        ResponseData.notes?.forEach((Note) => {
+          consolelogColor(Note.title, Note.color!);
+        });
+      } else {
+        console.log(chalk.red(`Notes not found`));
+      }
+      break;
+    case 'remove':
+      if ( ResponseData.success) {
+        console.log(
+            chalk.green(`Note removed!`),
+        );
+      } else {
+        console.log(chalk.red(`No note found`));
       }
       break;
     default:
@@ -121,22 +182,38 @@ yargs.command({
   },
   handler(argv) {
     if (typeof argv.user === 'string') {
-      const socket = net.connect({port: 60300});
+      const RequestJson :RequestType = {
+        type: 'list',
+        user: `${argv.user}`,
+      };
+      socket.write(JSON.stringify(RequestJson)+`\n`);
+    }
+  },
+});
 
-      socket.on('data', (data) => {
-        console.log(data.toString());
-        socket.end();
-      });
-
-      socket.write(
-          JSON.stringify(
-              {
-                type: 'list',
-                user: `${argv.user}`,
-              },
-          ) + `\n`,
-          // eslint-disable-next-line max-len
-      );
+yargs.command({
+  command: 'remove',
+  describe: 'Remove note',
+  builder: {
+    user: {
+      describe: 'Username',
+      demandOption: true,
+      type: 'string',
+    },
+    title: {
+      describe: 'Title',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.user === 'string' && typeof argv.title === 'string') {
+      const RequestJson :RequestType = {
+        type: 'remove',
+        user: `${argv.user}`,
+        title: `${argv.title}`,
+      };
+      socket.write(JSON.stringify(RequestJson)+`\n`);
     }
   },
 });

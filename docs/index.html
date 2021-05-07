@@ -59,8 +59,102 @@
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
 				<h1>Práctica 10 - Cliente y servidor para una aplicación de procesamiento de notas de texto</h1>
-				<p>Autor: Carlos Javier Delgado Hernández
-				Email: <a href="mailto:alu0101016054@ull.edu.es">alu0101016054@ull.edu.es</a></p>
+				<h1>Índice:</h1>
+				<ul>
+					<li><a href="#introducci%C3%B3n">Introducción</a></li>
+					<li><a href="#objetivos">Objetivos</a></li>
+					<li><a href="#desarrollo">Desarrollo</a><ul>
+							<li><a href="#types">Types</a><ul>
+									<li><a href="#notesjson">NotesJson</a></li>
+									<li><a href="#requesttype">RequestType</a></li>
+									<li><a href="#responsetype">ResponseType</a></li>
+								</ul>
+							</li>
+							<li><a href="#client">Client</a></li>
+							<li><a href="#server">Server</a></li>
+						</ul>
+					</li>
+				</ul>
+				<a href="#introducción" id="introducción" style="color: inherit; text-decoration: none;">
+					<h1>Introducción</h1>
+				</a>
+				<p>Implementación de la aplicación Notas desarrollada en la <code>Práctica 8</code> utilizando módulo <code>net</code> y la clase <code>EventEmitter</code> para generar eventos propios que gestionarán el comportamiento delprograma </p>
+				<a href="#objetivos" id="objetivos" style="color: inherit; text-decoration: none;">
+					<h1>Objetivos</h1>
+				</a>
+				<ul>
+					<li>Aprender a desarrollar aplicaciones de caracter servidor/cliente</li>
+					<li>Primer contacto con el módulo net</li>
+					<li>Desarrollar clases heredadas de <code>EventEmitter</code> para obtener un amyor control de las aplicaciones <code>asíncronas</code>.  </li>
+				</ul>
+				<a href="#desarrollo" id="desarrollo" style="color: inherit; text-decoration: none;">
+					<h1>Desarrollo</h1>
+				</a>
+				<p>A continuación se explicará las partes del código utilizadas:  </p>
+				<a href="#types" id="types" style="color: inherit; text-decoration: none;">
+					<h2>Types</h2>
+				</a>
+				<p>Este fichero contendrá los diferentes JSON que utilizaremos para el envio y respuestas de mensajes, además del JSON de la propia nota en sí. De esta forma la información enviada quedará mucho más estructurada.  </p>
+				<a href="#notesjson" id="notesjson" style="color: inherit; text-decoration: none;">
+					<h3>NotesJson</h3>
+				</a>
+				<pre><code class="language-typescript"><span style="color: #AF00DB">export</span><span style="color: #000000"> </span><span style="color: #0000FF">type</span><span style="color: #000000"> </span><span style="color: #267F99">NotesJson</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">user</span><span style="color: #000000">: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">title</span><span style="color: #000000">: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">body</span><span style="color: #000000">?: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">color</span><span style="color: #000000">?: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">}</span>
+</code></pre>
+				<p>Tipo de dato <code>JSON</code> que alamcena información respecto a una nota guardada en el sistema:</p>
+				<ul>
+					<li><code>user</code>: El usuario asociado a la nota (Obligatorio)</li>
+					<li><code>title</code>: Título de la nota (Obligatorio)</li>
+					<li><code>body</code>: Contenido de la nota (No obligatorio)</li>
+					<li><code>color</code>: Color asociada a la nota (No obligatorio)  </li>
+				</ul>
+				<a href="#requesttype" id="requesttype" style="color: inherit; text-decoration: none;">
+					<h3>RequestType</h3>
+				</a>
+				<pre><code class="language-typescript"><span style="color: #AF00DB">export</span><span style="color: #000000"> </span><span style="color: #0000FF">type</span><span style="color: #000000"> </span><span style="color: #267F99">RequestType</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">type</span><span style="color: #000000">: </span><span style="color: #A31515">&#039;add&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;update&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;remove&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;read&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;list&#039;</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">user</span><span style="color: #000000">: </span><span style="color: #267F99">string</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">title</span><span style="color: #000000">?: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">body</span><span style="color: #000000">?: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">color</span><span style="color: #000000">?: </span><span style="color: #267F99">string</span><span style="color: #000000">;</span>
+<span style="color: #000000">};</span>
+</code></pre>
+				<p>Tipo de dato <code>JSON</code> que almacena una petición enviada al servidor acompañada de la información pertinente:</p>
+				<ul>
+					<li><code>type</code>: Atributo que nos permite especificar la acción de la petición</li>
+					<li><code>user</code>: Usuario asociada a la petición (list)</li>
+					<li><code>title</code>: Título de la nota (add, read, remove)</li>
+					<li><code>body</code>: Contenido de la nota (add)</li>
+					<li><code>color</code>: Color de la nota (add)</li>
+				</ul>
+				<a href="#responsetype" id="responsetype" style="color: inherit; text-decoration: none;">
+					<h3>ResponseType</h3>
+				</a>
+				<pre><code class="language-typescript"><span style="color: #AF00DB">export</span><span style="color: #000000"> </span><span style="color: #0000FF">type</span><span style="color: #000000"> </span><span style="color: #267F99">ResponseType</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">type</span><span style="color: #000000">: </span><span style="color: #A31515">&#039;add&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;update&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;remove&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;read&#039;</span><span style="color: #000000"> | </span><span style="color: #A31515">&#039;list&#039;</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">success</span><span style="color: #000000">: </span><span style="color: #267F99">boolean</span><span style="color: #000000">;</span>
+<span style="color: #000000">  </span><span style="color: #001080">color</span><span style="color: #000000">?: </span><span style="color: #267F99">boolean</span>
+<span style="color: #000000">  </span><span style="color: #001080">notes</span><span style="color: #000000">?: </span><span style="color: #267F99">NotesJson</span><span style="color: #000000">[];</span>
+<span style="color: #000000">};</span>
+</code></pre>
+				<p>Tipo de dato <code>JSON</code> que envía la respuesta al cliente:</p>
+				<ul>
+					<li><code>type</code>: Tipo de acción</li>
+					<li><code>success</code>: Estado de la petición</li>
+					<li><code>color</code>: Boolean para comprobar si el color enviado es válido</li>
+					<li><code>notes</code>: Array de notas</li>
+				</ul>
+				<a href="#client" id="client" style="color: inherit; text-decoration: none;">
+					<h2>Client</h2>
+				</a>
+				<a href="#server" id="server" style="color: inherit; text-decoration: none;">
+					<h2>Server</h2>
+				</a>
+				<p>Autor: Carlos Javier Delgado Hernández<br>Email: <a href="mailto:alu0101016054@ull.edu.es">alu0101016054@ull.edu.es</a></p>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">

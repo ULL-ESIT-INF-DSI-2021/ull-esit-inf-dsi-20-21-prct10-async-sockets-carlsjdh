@@ -3,7 +3,12 @@ import * as yargs from 'yargs';
 import * as chalk from 'chalk';
 import {RequestType, ResponseType} from '../types';
 
-
+/**
+ * Función que muestra el color pasado por parametro
+ * @param text Texto a imprimir
+ * @param color Color
+ * @param inverse Inverso del color
+ */
 function consolelogColor(
     text :string, color :string, inverse :boolean = false,
 ) {
@@ -31,11 +36,17 @@ function consolelogColor(
   }
 }
 
+/**
+ * @description Establecemos la conexión al servidor por el puerto 60300
+ */
 const socket = net.connect({port: 60300});
 socket.on('error', () => {
   console.log(`Error with server`);
 });
 
+/**
+ * @description Procesamos los datos a recibir que es la respuesta del servidor
+ */
 socket.on('data', (data) => {
   const ResponseData :ResponseType = JSON.parse(data.toString());
   switch (ResponseData.type) {
@@ -98,6 +109,9 @@ socket.on('data', (data) => {
   socket.end();
 });
 
+/**
+ * @description Añadir nota
+ */
 yargs.command({
   command: 'add',
   describe: 'Add a new note',
@@ -143,6 +157,9 @@ yargs.command({
   },
 });
 
+/**
+ * @description Leer nota
+ */
 yargs.command({
   command: 'read',
   describe: 'read note',
@@ -170,6 +187,9 @@ yargs.command({
   },
 });
 
+/**
+ * @description Listar nota de un usuario
+ */
 yargs.command({
   command: 'list',
   describe: 'List notes',
@@ -191,6 +211,9 @@ yargs.command({
   },
 });
 
+/**
+ * @description Remover nota de un usuario
+ */
 yargs.command({
   command: 'remove',
   describe: 'Remove note',

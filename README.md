@@ -1,5 +1,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct10-async-sockets-carlsjdh/badge.svg?branch=main)](https://coveralls.io/github/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct10-async-sockets-carlsjdh?branch=main)[![Tests](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct10-async-sockets-carlsjdh/actions/workflows/tests.yml/badge.svg)](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct10-async-sockets-carlsjdh/actions/workflows/tests.yml)
 
+
+[Volver a Github](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct10-async-sockets-carlsjdh)  
+[Volver al informe](https://ull-esit-inf-dsi-2021.github.io/ull-esit-inf-dsi-20-21-prct10-async-sockets-carlsjdh/index.html)  
+
 <h1>Práctica 10 - Cliente y servidor para   
 una aplicación de procesamiento de notas de texto</h1>
 
@@ -16,6 +20,7 @@ una aplicación de procesamiento de notas de texto</h1>
   - [Server](#server)
 - [Extra - Wrapper:](#extra---wrapper)
   - [Clase Client EventEmitter](#clase-client-eventemitter)
+- [Ejemplo de funcionamiento:](#ejemplo-de-funcionamiento)
 - [Conclusión:](#conclusión)
 
 # Introducción  
@@ -413,5 +418,36 @@ it('Clase cliente emite petición read note', (done) => {
 
 Como podemos observar en esta prueba, enviamos a la clase la respuesta y esta procesará la información que deberá salir en el evento `response` según los datos del `JSON` de tipo `ResponseType`.  
 
+# Ejemplo de funcionamiento:
+__Server__
+````bash
+[~/practicas/P10_2/P10(main)]$node dist/server/server.js
+Waiting for clients to connect.
+A client has connected.
+Note title taken!
+A client has disconnected
+A client has connected.
+New note added!
+A client has disconnected
+A client has connected.
+Your notes:
+- Nota1
+- nota
+A client has disconnected
+````
+
+__Client__
+````bash
+[~/practicas/P10_2/P10(main)]$node dist/client/client.js add --user="Test" --title="nota" --body="hola" --color="blue"
+Note title taken!
+[~/practicas/P10_2/P10(main)]$node dist/client/client.js add --user="Carlos" --title="nota" --body="hola" --color="blue"
+New note added!
+[~/practicas/P10_2/P10(main)]$node dist/client/client.js list --user="Carlos" Notes read correctly
+Your notes
+Nota1
+nota
+[~/practicas/P10_2/P10(main)]$
+
+````
 # Conclusión:
 La implementación delprograma en sí no ha provocado dificultades, sin embargo, adaptar el código para poder ser utilizado en las pruebas de `mocha` es lo que más tiempo sin lugar a dudas ha podido llevarme. Aunque no se lograse un resultado perfecto en este apartado por cuestiones de tiempo con la implemetanción unicamente del cliente y solo parte de sus funcionalidades en lo que respecta al código adaptado a los test.

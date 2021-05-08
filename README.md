@@ -14,6 +14,8 @@ una aplicación de procesamiento de notas de texto</h1>
     - [ResponseType](#responsetype)
   - [Client](#client)
   - [Server](#server)
+- [Extra - Wrapper:](#extra---wrapper)
+  - [Clase Client EventEmitter](#clase-client-eventemitter)
 - [Conclusión:](#conclusión)
 
 # Introducción  
@@ -315,7 +317,101 @@ Clase Notes función `add`:
       return JSON.stringify(ResponseJson);
     }
 ````
-Ahora simplemente con enviar la petición que nos devuelve `Notes` sería suficiente.
+Ahora simplemente con enviar la petición que nos devuelve `Notes` sería suficiente.  
+
+# Extra - Wrapper:  
+Para efectuar los test es necesario generar una clase que permita introducir un argumento `EventEmitter` que permitirá gestionar los diferentes eventos del argumento y generar nosotros unos nuevos según nos convenga.  
+## Clase Client EventEmitter  
+````typescript
+import {EventEmitter} from 'events';
+import {ResponseType} from '../../types';
+import * as chalk from 'chalk';
+
+export class Client extends EventEmitter {
+  constructor(connection: EventEmitter) {
+    super();
+    connection.on('error', () => {
+      this.emit('error', 'error del servidor');
+    });
+
+    connection.on('data', (data) => {
+      const ResponseData :ResponseType = JSON.parse(data.toString());
+      switch (ResponseData.type) {
+        case 'add':
+          if ( ResponseData.success) {
+            this.emit('response', `New note added!`, false);
+          } else {
+            if (!ResponseData.color) {
+              this.emit('response', `Problem with Color`, true);
+            } else {
+              this.emit('response', `Note title taken!`, true);
+            }
+          }
+          break;
+        case 'read':
+          if ( ResponseData.success) {
+            this.emit(
+                // eslint-disable-next-line max-len
+                'response', `Note ${ResponseData.notes![0].title} read correctly`, true,
+            );
+          } else {
+            console.log(chalk.red(`Note not found`));
+          }
+          break;
+      }
+    });
+  }
+};
+````
+El objetivo es separar la funcionalidad del módulo `net` del programa que gestiona los eventos. Para ellos simplemente crearemos un evento nuevo llamado `response` que contendrá la respuesta del servidor ya procesada cuando realizamos una inspección de dicho evento:  
+__Código de testeo de la clase:__
+````typescript
+
+const socket = net.connect({port: 60300});
+const client :Client = new Client(socket);
+
+client.on('response', (respond, error) => {
+  if (!error ) {
+    console.log(chalk.green(respond));
+  } else {
+    console.log(chalk.red(respond));
+  }
+  socket.end();
+});
+````  
+
+Observamos como pasamos el `Socket` que es un `EventEmitter`. Ahora tan solo analizamos el evento personalizado que hemos creado llamado `response` y posteriomente comunicamos al servidor que ya hemos procesado la solicitud `socket.end()`.  
+Como he comentado anteriormente, la propia clase es posible testearla provocando los eventos que lo activan en los tests facilitando enormente sus prueba:  
+
+````typescript
+it('Clase cliente emite petición read note', (done) => {
+    const socket = new EventEmitter();
+    const client = new Client(socket);
+
+    client.on('response', (response) => {
+      expect(response).to.be.eql('Note Note test read correctly');
+    });
+
+    const ResponseJson :ResponseType = {
+      type: 'read',
+      success: true,
+      notes: [
+        {
+          user: 'Usertest',
+          title: 'Note test',
+          body: 'test',
+          color: 'green',
+        },
+      ],
+      color: false,
+    };
+
+    socket.emit('data', JSON.stringify(ResponseJson));
+    done();
+  });
+```` 
+
+Como podemos observar en esta prueba, enviamos a la clase la respuesta y esta procesará la información que deberá salir en el evento `response` según los datos del `JSON` de tipo `ResponseType`.  
 
 # Conclusión:
-La implementación delprograma en sí no ha provocado dificultades, sin embargo, adaptar el código para poder ser utilizado en las pruebas de `mocha` es lo que más tiempo sin lugar a dudas ha podido llevarme. Aunque no se lograse un resultado perfecto en este apartado por cuestiones de tiempo.
+La implementación delprograma en sí no ha provocado dificultades, sin embargo, adaptar el código para poder ser utilizado en las pruebas de `mocha` es lo que más tiempo sin lugar a dudas ha podido llevarme. Aunque no se lograse un resultado perfecto en este apartado por cuestiones de tiempo con la implemetanción unicamente del cliente y solo parte de sus funcionalidades en lo que respecta al código adaptado a los test.

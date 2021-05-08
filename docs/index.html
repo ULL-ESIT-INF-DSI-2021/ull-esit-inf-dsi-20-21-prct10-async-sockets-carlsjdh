@@ -76,6 +76,10 @@
 							<li><a href="#server">Server</a></li>
 						</ul>
 					</li>
+					<li><a href="#extra---wrapper">Extra - Wrapper:</a><ul>
+							<li><a href="#clase-client-eventemitter">Clase Client EventEmitter</a></li>
+						</ul>
+					</li>
 					<li><a href="#conclusi%C3%B3n">Conclusión:</a></li>
 				</ul>
 				<a href="#introducción" id="introducción" style="color: inherit; text-decoration: none;">
@@ -371,11 +375,100 @@
 <span style="color: #000000">      </span><span style="color: #AF00DB">return</span><span style="color: #000000"> </span><span style="color: #267F99">JSON</span><span style="color: #000000">.</span><span style="color: #795E26">stringify</span><span style="color: #000000">(</span><span style="color: #001080">ResponseJson</span><span style="color: #000000">);</span>
 <span style="color: #000000">    }</span>
 </code></pre>
-				<p>Ahora simplemente con enviar la petición que nos devuelve <code>Notes</code> sería suficiente.</p>
+				<p>Ahora simplemente con enviar la petición que nos devuelve <code>Notes</code> sería suficiente.  </p>
+				<a href="#extra---wrapper" id="extra---wrapper" style="color: inherit; text-decoration: none;">
+					<h1>Extra - Wrapper:</h1>
+				</a>
+				<p>Para efectuar los test es necesario generar una clase que permita introducir un argumento <code>EventEmitter</code> que permitirá gestionar los diferentes eventos del argumento y generar nosotros unos nuevos según nos convenga.  </p>
+				<a href="#clase-client-eventemitter" id="clase-client-eventemitter" style="color: inherit; text-decoration: none;">
+					<h2>Clase Client EventEmitter</h2>
+				</a>
+				<pre><code class="language-typescript"><span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">EventEmitter</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;events&#039;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">ResponseType</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;../../types&#039;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> </span><span style="color: #0000FF">*</span><span style="color: #000000"> </span><span style="color: #AF00DB">as</span><span style="color: #000000"> </span><span style="color: #001080">chalk</span><span style="color: #000000"> </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;chalk&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #AF00DB">export</span><span style="color: #000000"> </span><span style="color: #0000FF">class</span><span style="color: #000000"> </span><span style="color: #267F99">Client</span><span style="color: #000000"> </span><span style="color: #0000FF">extends</span><span style="color: #000000"> </span><span style="color: #267F99">EventEmitter</span><span style="color: #000000"> {</span>
+<span style="color: #000000">  </span><span style="color: #0000FF">constructor</span><span style="color: #000000">(</span><span style="color: #001080">connection</span><span style="color: #000000">: </span><span style="color: #267F99">EventEmitter</span><span style="color: #000000">) {</span>
+<span style="color: #000000">    </span><span style="color: #0000FF">super</span><span style="color: #000000">();</span>
+<span style="color: #000000">    </span><span style="color: #001080">connection</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;error&#039;</span><span style="color: #000000">, () </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">      </span><span style="color: #0000FF">this</span><span style="color: #000000">.</span><span style="color: #795E26">emit</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;error&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;error del servidor&#039;</span><span style="color: #000000">);</span>
+<span style="color: #000000">    });</span>
+
+<span style="color: #000000">    </span><span style="color: #001080">connection</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;data&#039;</span><span style="color: #000000">, (</span><span style="color: #001080">data</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">      </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ResponseData</span><span style="color: #000000"> :</span><span style="color: #267F99">ResponseType</span><span style="color: #000000"> = </span><span style="color: #267F99">JSON</span><span style="color: #000000">.</span><span style="color: #795E26">parse</span><span style="color: #000000">(</span><span style="color: #001080">data</span><span style="color: #000000">.</span><span style="color: #795E26">toString</span><span style="color: #000000">());</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">switch</span><span style="color: #000000"> (</span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">type</span><span style="color: #000000">) {</span>
+<span style="color: #000000">        </span><span style="color: #AF00DB">case</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;add&#039;</span><span style="color: #000000">:</span>
+<span style="color: #000000">          </span><span style="color: #AF00DB">if</span><span style="color: #000000"> ( </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">success</span><span style="color: #000000">) {</span>
+<span style="color: #000000">            </span><span style="color: #0000FF">this</span><span style="color: #000000">.</span><span style="color: #795E26">emit</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;response&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">`New note added!`</span><span style="color: #000000">, </span><span style="color: #0000FF">false</span><span style="color: #000000">);</span>
+<span style="color: #000000">          } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">            </span><span style="color: #AF00DB">if</span><span style="color: #000000"> (!</span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">color</span><span style="color: #000000">) {</span>
+<span style="color: #000000">              </span><span style="color: #0000FF">this</span><span style="color: #000000">.</span><span style="color: #795E26">emit</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;response&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">`Problem with Color`</span><span style="color: #000000">, </span><span style="color: #0000FF">true</span><span style="color: #000000">);</span>
+<span style="color: #000000">            } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">              </span><span style="color: #0000FF">this</span><span style="color: #000000">.</span><span style="color: #795E26">emit</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;response&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">`Note title taken!`</span><span style="color: #000000">, </span><span style="color: #0000FF">true</span><span style="color: #000000">);</span>
+<span style="color: #000000">            }</span>
+<span style="color: #000000">          }</span>
+<span style="color: #000000">          </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">        </span><span style="color: #AF00DB">case</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;read&#039;</span><span style="color: #000000">:</span>
+<span style="color: #000000">          </span><span style="color: #AF00DB">if</span><span style="color: #000000"> ( </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">success</span><span style="color: #000000">) {</span>
+<span style="color: #000000">            </span><span style="color: #0000FF">this</span><span style="color: #000000">.</span><span style="color: #795E26">emit</span><span style="color: #000000">(</span>
+<span style="color: #000000">                </span><span style="color: #008000">// eslint-disable-next-line max-len</span>
+<span style="color: #000000">                </span><span style="color: #A31515">&#039;response&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">`Note </span><span style="color: #0000FF">${</span><span style="color: #001080">ResponseData</span><span style="color: #000000FF">.</span><span style="color: #001080">notes</span><span style="color: #000000">!</span><span style="color: #000000FF">[</span><span style="color: #098658">0</span><span style="color: #000000FF">].</span><span style="color: #001080">title</span><span style="color: #0000FF">}</span><span style="color: #A31515"> read correctly`</span><span style="color: #000000">, </span><span style="color: #0000FF">true</span><span style="color: #000000">,</span>
+<span style="color: #000000">            );</span>
+<span style="color: #000000">          } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">            </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #A31515">`Note not found`</span><span style="color: #000000">));</span>
+<span style="color: #000000">          }</span>
+<span style="color: #000000">          </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">      }</span>
+<span style="color: #000000">    });</span>
+<span style="color: #000000">  }</span>
+<span style="color: #000000">};</span>
+</code></pre>
+				<p>El objetivo es separar la funcionalidad del módulo <code>net</code> del programa que gestiona los eventos. Para ellos simplemente crearemos un evento nuevo llamado <code>response</code> que contendrá la respuesta del servidor ya procesada cuando realizamos una inspección de dicho evento:<br><strong>Código de testeo de la clase:</strong></p>
+				<pre><code class="language-typescript">
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">socket</span><span style="color: #000000"> = </span><span style="color: #001080">net</span><span style="color: #000000">.</span><span style="color: #795E26">connect</span><span style="color: #000000">({</span><span style="color: #001080">port:</span><span style="color: #000000"> </span><span style="color: #098658">60300</span><span style="color: #000000">});</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> :</span><span style="color: #267F99">Client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Client</span><span style="color: #000000">(</span><span style="color: #001080">socket</span><span style="color: #000000">);</span>
+
+<span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;response&#039;</span><span style="color: #000000">, (</span><span style="color: #001080">respond</span><span style="color: #000000">, </span><span style="color: #001080">error</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">  </span><span style="color: #AF00DB">if</span><span style="color: #000000"> (!</span><span style="color: #001080">error</span><span style="color: #000000"> ) {</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">green</span><span style="color: #000000">(</span><span style="color: #001080">respond</span><span style="color: #000000">));</span>
+<span style="color: #000000">  } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #001080">respond</span><span style="color: #000000">));</span>
+<span style="color: #000000">  }</span>
+<span style="color: #000000">  </span><span style="color: #001080">socket</span><span style="color: #000000">.</span><span style="color: #795E26">end</span><span style="color: #000000">();</span>
+<span style="color: #000000">});</span>
+</code></pre>
+				<p>Observamos como pasamos el <code>Socket</code> que es un <code>EventEmitter</code>. Ahora tan solo analizamos el evento personalizado que hemos creado llamado <code>response</code> y posteriomente comunicamos al servidor que ya hemos procesado la solicitud <code>socket.end()</code>.<br>Como he comentado anteriormente, la propia clase es posible testearla provocando los eventos que lo activan en los tests facilitando enormente sus prueba:  </p>
+				<pre><code class="language-typescript"><span style="color: #795E26">it</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;Clase cliente emite petición read note&#039;</span><span style="color: #000000">, (</span><span style="color: #001080">done</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">socket</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">EventEmitter</span><span style="color: #000000">();</span>
+<span style="color: #000000">    </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Client</span><span style="color: #000000">(</span><span style="color: #001080">socket</span><span style="color: #000000">);</span>
+
+<span style="color: #000000">    </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;response&#039;</span><span style="color: #000000">, (</span><span style="color: #001080">response</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">      </span><span style="color: #795E26">expect</span><span style="color: #000000">(</span><span style="color: #001080">response</span><span style="color: #000000">).</span><span style="color: #001080">to</span><span style="color: #000000">.</span><span style="color: #001080">be</span><span style="color: #000000">.</span><span style="color: #795E26">eql</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;Note Note test read correctly&#039;</span><span style="color: #000000">);</span>
+<span style="color: #000000">    });</span>
+
+<span style="color: #000000">    </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ResponseJson</span><span style="color: #000000"> :</span><span style="color: #267F99">ResponseType</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">      </span><span style="color: #001080">type:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;read&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">      </span><span style="color: #001080">success:</span><span style="color: #000000"> </span><span style="color: #0000FF">true</span><span style="color: #000000">,</span>
+<span style="color: #000000">      </span><span style="color: #001080">notes:</span><span style="color: #000000"> [</span>
+<span style="color: #000000">        {</span>
+<span style="color: #000000">          </span><span style="color: #001080">user:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Usertest&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">          </span><span style="color: #001080">title:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Note test&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">          </span><span style="color: #001080">body:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;test&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">          </span><span style="color: #001080">color:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;green&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">        },</span>
+<span style="color: #000000">      ],</span>
+<span style="color: #000000">      </span><span style="color: #001080">color:</span><span style="color: #000000"> </span><span style="color: #0000FF">false</span><span style="color: #000000">,</span>
+<span style="color: #000000">    };</span>
+
+<span style="color: #000000">    </span><span style="color: #001080">socket</span><span style="color: #000000">.</span><span style="color: #795E26">emit</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;data&#039;</span><span style="color: #000000">, </span><span style="color: #267F99">JSON</span><span style="color: #000000">.</span><span style="color: #795E26">stringify</span><span style="color: #000000">(</span><span style="color: #001080">ResponseJson</span><span style="color: #000000">));</span>
+<span style="color: #000000">    </span><span style="color: #795E26">done</span><span style="color: #000000">();</span>
+<span style="color: #000000">  });</span>
+</code></pre>
+				<p>Como podemos observar en esta prueba, enviamos a la clase la respuesta y esta procesará la información que deberá salir en el evento <code>response</code> según los datos del <code>JSON</code> de tipo <code>ResponseType</code>.  </p>
 				<a href="#conclusión" id="conclusión" style="color: inherit; text-decoration: none;">
 					<h1>Conclusión:</h1>
 				</a>
-				<p>La implementación delprograma en sí no ha provocado dificultades, sin embargo, adaptar el código para poder ser utilizado en las pruebas de <code>mocha</code> es lo que más tiempo sin lugar a dudas ha podido llevarme. Aunque no se lograse un resultado perfecto en este apartado por cuestiones de tiempo.</p>
+				<p>La implementación delprograma en sí no ha provocado dificultades, sin embargo, adaptar el código para poder ser utilizado en las pruebas de <code>mocha</code> es lo que más tiempo sin lugar a dudas ha podido llevarme. Aunque no se lograse un resultado perfecto en este apartado por cuestiones de tiempo con la implemetanción unicamente del cliente y solo parte de sus funcionalidades en lo que respecta al código adaptado a los test.</p>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">

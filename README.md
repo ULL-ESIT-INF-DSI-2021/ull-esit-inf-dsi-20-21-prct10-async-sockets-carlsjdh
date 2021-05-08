@@ -12,6 +12,7 @@ una aplicación de procesamiento de notas de texto</h1>
     - [ResponseType](#responsetype)
   - [Client](#client)
   - [Server](#server)
+- [Conclusión:](#conclusión)
 
 # Introducción  
 Implementación de la aplicación Notas desarrollada en la `Práctica 8` utilizando módulo `net` y la clase `EventEmitter` para generar eventos propios que gestionarán el comportamiento delprograma 
@@ -166,10 +167,153 @@ socket.on('data', (data) => {
   }
   socket.end();
 });
-````
+````  
+
+`socket.on('data', (data) => {})` queda la escucha de recibir datos por el socket pertinente y ejecutará dicho `callback` una vez detecte información.  
+Se presupone que la información a recibir es un `ResponseType` que pertenece a la respuesta del servidor. Vamos a analizar la respuesta de una petición `add`:  
+
+````typescript
+switch (ResponseData.type) {
+  case 'add':
+    if ( ResponseData.success) {
+      console.log(chalk.green(`New note added!`));
+    } else {
+      if (!ResponseData.color) {
+        console.log(chalk.red(`Problem with Color`));
+      } else {
+        console.log(chalk.red(`Note title taken!`));
+      }
+    }
+    break;
+````  
+En este caso deberemos filtrar el mensaje a mostrar segçun el contenido del `JSON`:
+- `success = true`: La nota se ha agregado correctamente  
+- `sucess = false`: Error al procesar la nota
+  - `color = true`: Error al procesar la nota debido a un color incorrecto
+  - `color = false`: Error al procesar la nota ya que esta se encontraba en la base de datos  
+
+Es importante recalcar que el servidor ejecuta el evento `socket.end()` para comunicarle al servidor que ha recibido correctamente el mensaje
+
 ## Server
+Creamos el server `const server = net.createServer((connection) => {})` y activamos el puerto por el cual va a escuchar `server.listen(60300, () => {})`.  
 
+También crearemos nuestro propia clase que hereda de `EventEmitter` para gestionar nuestros propios eventos dentro del programa.  
+````typescript
+export class RequestEventEmitterServer extends EventEmitter {
+  constructor(connection: EventEmitter) {
+    super();
+    let wholeData = '';
+    connection.on('data', (dataChunk) => {
+      wholeData += dataChunk;
 
+      let messageLimit = wholeData.indexOf('\n');
+      while (messageLimit !== -1) {
+        const message = wholeData.substring(0, messageLimit);
+        wholeData = wholeData.substring(messageLimit + 1);
+        this.emit('request', JSON.parse(message));
+        messageLimit = wholeData.indexOf('\n');
+      }
+    });
+  };
+}
+````  
+Esta clase simplemente se encarga de emitir el evento `request` cuando ha detectado que la petición del cliente ha sido recibida correctamente pasandole el `JSON` parseado directamente `this.emit('request', JSON.parse(message))`.
 
-Autor: Carlos Javier Delgado Hernández  
-Email: alu0101016054@ull.edu.es
+Es entonces dentro de la conexión cuando generamos esa nueva clase y cuando de detecte dicho evento procesar la petición  
+
+````typescript
+const server = net.createServer((connection) => {
+  const serverEvent = new RequestEventEmitterServer(connection);
+  console.log('A client has connected.');
+
+  serverEvent.on('request', (request) => {
+````  
+Analizamos el tipo de request obtenida y en función a la misma invocaremos diferentes métodos del objeto de la clase `Notes`. Vamos a analizar la request `add`:  
+
+````typescript
+switch (request.type) {
+      case 'add':
+        const respond = notes.addNotes(
+            request.user,
+            request.title,
+            request.body,
+            request.color,
+        );
+        connection.write(respond);
+        break;
+````  
+
+Todos los métodos de la clase `Notes` han sido modificados para devolver un `JSON` del tipo `ResponseType` facilitando enormemente la implementación: 
+
+Clase Notes función `add`:  
+
+````typescript
+  addNotes(username :string, title :string, body :string, color :string) {
+    if ( ! this.checkColor(color) ) {
+      const ResponseJson :ResponseType = {
+        type: 'add',
+        success: false,
+        color: false,
+      };
+      console.log('Color not available');
+      return JSON.stringify(ResponseJson);
+    };
+
+    // eslint-disable-next-line max-len
+    const text = `{ "title": "${title}", "body": "${body}" , "color": "${color}" }`;
+
+    if (fs.existsSync(`./notes/${username}`)) {
+      if (!fs.existsSync(`./notes/${username}/${title}`)) {
+        fs.writeFileSync(`./notes/${username}/${title}`, text);
+
+        const NoteRespondJson :NotesJson = {
+          user: `${username}`,
+          title: `${title}`,
+        };
+
+        const ResponseJson :ResponseType = {
+          type: 'add',
+          success: true,
+          notes: [NoteRespondJson],
+          color: true,
+        };
+
+        console.log(`New note added!`);
+
+        return JSON.stringify(ResponseJson);
+      } else {
+        const ResponseJson :ResponseType = {
+          type: 'add',
+          success: false,
+          color: true,
+        };
+
+        console.log(`Note title taken!`);
+
+        return JSON.stringify(ResponseJson);
+      };
+    } else {
+      fs.mkdirSync(`./notes/${username}`, {recursive: true});
+      fs.writeFileSync(`./notes/${username}/${title}`, text);
+
+      const NoteRespondJson :NotesJson = {
+        user: `${username}`,
+        title: `${title}`,
+      };
+
+      const ResponseJson :ResponseType = {
+        type: 'add',
+        success: true,
+        notes: [NoteRespondJson],
+        color: true,
+      };
+
+      console.log(`New note added!`);
+
+      return JSON.stringify(ResponseJson);
+    }
+````
+Ahora simplemente con enviar la petición que nos devuelve `Notes` sería suficiente.
+
+# Conclusión:
+La implementación delprograma en sí no ha provocado dificultades, sin embargo, adaptar el código para poder ser utilizado en las pruebas de `mocha` es lo que más tiempo sin lugar a dudas ha podido llevarme. Aunque no se lograse un resultado perfecto en este apartado por cuestiones de tiempo.

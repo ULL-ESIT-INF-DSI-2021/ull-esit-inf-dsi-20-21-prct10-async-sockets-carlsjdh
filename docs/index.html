@@ -58,7 +58,8 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<h1>Práctica 10 - Cliente y servidor para una aplicación de procesamiento de notas de texto</h1>
+				<h1>Práctica 10 - Cliente y servidor para
+				una aplicación de procesamiento de notas de texto</h1>
 				<h1>Índice:</h1>
 				<ul>
 					<li><a href="#introducci%C3%B3n">Introducción</a></li>
@@ -151,6 +152,89 @@
 				<a href="#client" id="client" style="color: inherit; text-decoration: none;">
 					<h2>Client</h2>
 				</a>
+				<p>El cliente se conectará al servidor mediante el puerto 60300 <code>const socket = net.connect({port: 60300});</code> y en caso de error de conexión mostraremos un error en pantalla</p>
+				<pre><code class="language-typescript"><span style="color: #001080">socket</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;error&#039;</span><span style="color: #000000">, () </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">  </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">`Error with server`</span><span style="color: #000000">);</span>
+<span style="color: #000000">});</span>
+</code></pre>
+				<p>Si la conexión se ha realizado correctamente ahora solamente tendremos que mandar el <code>JSON</code> de <code>RequestType</code> con la información proporcionada a traves de <code>yargs</code> según el comando utilizado.</p>
+				<p>Por ejemplo, el comando <code>add</code> necesitamos mandar toda la información de la nota:  </p>
+				<pre><code class="language-typescript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">RequestJson</span><span style="color: #000000"> :</span><span style="color: #267F99">RequestType</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">type:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;add&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">user:</span><span style="color: #000000"> </span><span style="color: #A31515">`</span><span style="color: #0000FF">${</span><span style="color: #001080">argv</span><span style="color: #000000FF">.</span><span style="color: #001080">user</span><span style="color: #0000FF">}</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">title:</span><span style="color: #000000"> </span><span style="color: #A31515">`</span><span style="color: #0000FF">${</span><span style="color: #001080">argv</span><span style="color: #000000FF">.</span><span style="color: #001080">title</span><span style="color: #0000FF">}</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">body:</span><span style="color: #000000"> </span><span style="color: #A31515">`</span><span style="color: #0000FF">${</span><span style="color: #001080">argv</span><span style="color: #000000FF">.</span><span style="color: #001080">body</span><span style="color: #0000FF">}</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">color:</span><span style="color: #000000"> </span><span style="color: #A31515">`</span><span style="color: #0000FF">${</span><span style="color: #001080">argv</span><span style="color: #000000FF">.</span><span style="color: #001080">color</span><span style="color: #0000FF">}</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">};</span>
+
+<span style="color: #001080">socket</span><span style="color: #000000">.</span><span style="color: #795E26">write</span><span style="color: #000000">(</span>
+<span style="color: #000000">    </span><span style="color: #267F99">JSON</span><span style="color: #000000">.</span><span style="color: #795E26">stringify</span><span style="color: #000000">(</span><span style="color: #001080">RequestJson</span><span style="color: #000000">) +</span><span style="color: #A31515">`</span><span style="color: #EE0000">\n</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">);</span>
+</code></pre>
+				<p>con <code>write</code> enviamos el contenido en formato <code>string</code> gracias al uso de <code>JSON.stringify</code> que nos permite transformar un <code>JSON</code> a <code>string</code> (También es necesario especificar el salto de línea para comunicar al servidor que ya hemos dejado de enviar información).  </p>
+				<p>El patrón de comportamiento se repite para cada uno de los comanods, lo interesante es realmente analizar como procesar la respuesta de la solicitud:  </p>
+				<pre><code class="language-typescript"><span style="color: #001080">socket</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;data&#039;</span><span style="color: #000000">, (</span><span style="color: #001080">data</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">  </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ResponseData</span><span style="color: #000000"> :</span><span style="color: #267F99">ResponseType</span><span style="color: #000000"> = </span><span style="color: #267F99">JSON</span><span style="color: #000000">.</span><span style="color: #795E26">parse</span><span style="color: #000000">(</span><span style="color: #001080">data</span><span style="color: #000000">.</span><span style="color: #795E26">toString</span><span style="color: #000000">());</span>
+<span style="color: #000000">  </span><span style="color: #AF00DB">switch</span><span style="color: #000000"> (</span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">type</span><span style="color: #000000">) {</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">case</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;add&#039;</span><span style="color: #000000">:</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">if</span><span style="color: #000000"> ( </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">success</span><span style="color: #000000">) {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">green</span><span style="color: #000000">(</span><span style="color: #A31515">`New note added!`</span><span style="color: #000000">));</span>
+<span style="color: #000000">      } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #AF00DB">if</span><span style="color: #000000"> (!</span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">color</span><span style="color: #000000">) {</span>
+<span style="color: #000000">          </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #A31515">`Problem with Color`</span><span style="color: #000000">));</span>
+<span style="color: #000000">        } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">          </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #A31515">`Note title taken!`</span><span style="color: #000000">));</span>
+<span style="color: #000000">        }</span>
+<span style="color: #000000">      }</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">case</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;read&#039;</span><span style="color: #000000">:</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">if</span><span style="color: #000000"> ( </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">success</span><span style="color: #000000">) {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span>
+<span style="color: #000000">            </span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">green</span><span style="color: #000000">(</span><span style="color: #A31515">`Note </span><span style="color: #0000FF">${</span><span style="color: #001080">ResponseData</span><span style="color: #000000FF">.</span><span style="color: #001080">notes</span><span style="color: #000000">!</span><span style="color: #000000FF">[</span><span style="color: #098658">0</span><span style="color: #000000FF">].</span><span style="color: #001080">title</span><span style="color: #0000FF">}</span><span style="color: #A31515"> read correctly`</span><span style="color: #000000">),</span>
+<span style="color: #000000">        );</span>
+<span style="color: #000000">        </span><span style="color: #795E26">consolelogColor</span><span style="color: #000000">(</span>
+<span style="color: #000000">          </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">notes</span><span style="color: #000000">![</span><span style="color: #098658">0</span><span style="color: #000000">].</span><span style="color: #001080">title</span><span style="color: #000000">,</span>
+<span style="color: #000000">          </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">notes</span><span style="color: #000000">![</span><span style="color: #098658">0</span><span style="color: #000000">].</span><span style="color: #001080">color</span><span style="color: #000000">!,</span>
+<span style="color: #000000">          </span><span style="color: #0000FF">true</span><span style="color: #000000">,</span>
+<span style="color: #000000">        );</span>
+<span style="color: #000000">        </span><span style="color: #795E26">consolelogColor</span><span style="color: #000000">(</span>
+<span style="color: #000000">            </span><span style="color: #A31515">`</span><span style="color: #0000FF">${</span><span style="color: #001080">ResponseData</span><span style="color: #000000FF">.</span><span style="color: #001080">notes</span><span style="color: #000000">!</span><span style="color: #000000FF">[</span><span style="color: #098658">0</span><span style="color: #000000FF">].</span><span style="color: #001080">body</span><span style="color: #0000FF">}</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">            </span><span style="color: #A31515">`</span><span style="color: #0000FF">${</span><span style="color: #001080">ResponseData</span><span style="color: #000000FF">.</span><span style="color: #001080">notes</span><span style="color: #000000">!</span><span style="color: #000000FF">[</span><span style="color: #098658">0</span><span style="color: #000000FF">].</span><span style="color: #001080">color</span><span style="color: #0000FF">}</span><span style="color: #A31515">`</span><span style="color: #000000">,</span>
+<span style="color: #000000">        );</span>
+<span style="color: #000000">      } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #A31515">`Note not found`</span><span style="color: #000000">));</span>
+<span style="color: #000000">      }</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">case</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;list&#039;</span><span style="color: #000000">:</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">if</span><span style="color: #000000"> ( </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">success</span><span style="color: #000000">) {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span>
+<span style="color: #000000">            </span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">green</span><span style="color: #000000">(</span><span style="color: #A31515">`Notes read correctly`</span><span style="color: #000000">),</span>
+<span style="color: #000000">        );</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span>
+<span style="color: #000000">            </span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #001080">white</span><span style="color: #000000">.</span><span style="color: #795E26">inverse</span><span style="color: #000000">(</span><span style="color: #A31515">`Your notes`</span><span style="color: #000000">),</span>
+<span style="color: #000000">        );</span>
+<span style="color: #000000">        </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">notes</span><span style="color: #000000">?.</span><span style="color: #795E26">forEach</span><span style="color: #000000">((</span><span style="color: #001080">Note</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">          </span><span style="color: #795E26">consolelogColor</span><span style="color: #000000">(</span><span style="color: #001080">Note</span><span style="color: #000000">.</span><span style="color: #001080">title</span><span style="color: #000000">, </span><span style="color: #001080">Note</span><span style="color: #000000">.</span><span style="color: #001080">color</span><span style="color: #000000">!);</span>
+<span style="color: #000000">        });</span>
+<span style="color: #000000">      } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #A31515">`Notes not found`</span><span style="color: #000000">));</span>
+<span style="color: #000000">      }</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">case</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;remove&#039;</span><span style="color: #000000">:</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">if</span><span style="color: #000000"> ( </span><span style="color: #001080">ResponseData</span><span style="color: #000000">.</span><span style="color: #001080">success</span><span style="color: #000000">) {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span>
+<span style="color: #000000">            </span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">green</span><span style="color: #000000">(</span><span style="color: #A31515">`Note removed!`</span><span style="color: #000000">),</span>
+<span style="color: #000000">        );</span>
+<span style="color: #000000">      } </span><span style="color: #AF00DB">else</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #001080">chalk</span><span style="color: #000000">.</span><span style="color: #795E26">red</span><span style="color: #000000">(</span><span style="color: #A31515">`No note found`</span><span style="color: #000000">));</span>
+<span style="color: #000000">      }</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">default</span><span style="color: #000000">:</span>
+<span style="color: #000000">      </span><span style="color: #AF00DB">break</span><span style="color: #000000">;</span>
+<span style="color: #000000">  }</span>
+<span style="color: #000000">  </span><span style="color: #001080">socket</span><span style="color: #000000">.</span><span style="color: #795E26">end</span><span style="color: #000000">();</span>
+<span style="color: #000000">});</span>
+</code></pre>
 				<a href="#server" id="server" style="color: inherit; text-decoration: none;">
 					<h2>Server</h2>
 				</a>

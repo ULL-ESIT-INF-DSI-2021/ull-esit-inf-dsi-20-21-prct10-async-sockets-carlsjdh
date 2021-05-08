@@ -1,4 +1,5 @@
-<h1>Práctica 10 - Cliente y servidor para una aplicación de procesamiento de notas de texto</h1>
+<h1>Práctica 10 - Cliente y servidor para   
+una aplicación de procesamiento de notas de texto</h1>
 
 <h1>Índice:</h1>  
 
@@ -77,6 +78,95 @@ Tipo de dato `JSON` que envía la respuesta al cliente:
 
 
 ## Client
+El cliente se conectará al servidor mediante el puerto 60300 `const socket = net.connect({port: 60300});` y en caso de error de conexión mostraremos un error en pantalla
+````typescript
+socket.on('error', () => {
+  console.log(`Error with server`);
+});
+````
+Si la conexión se ha realizado correctamente ahora solamente tendremos que mandar el `JSON` de `RequestType` con la información proporcionada a traves de `yargs` según el comando utilizado.
+
+Por ejemplo, el comando `add` necesitamos mandar toda la información de la nota:  
+````typescript
+const RequestJson :RequestType = {
+  type: 'add',
+  user: `${argv.user}`,
+  title: `${argv.title}`,
+  body: `${argv.body}`,
+  color: `${argv.color}`,
+};
+
+socket.write(
+    JSON.stringify(RequestJson) +`\n`,
+);
+````
+con `write` enviamos el contenido en formato `string` gracias al uso de `JSON.stringify` que nos permite transformar un `JSON` a `string` (También es necesario especificar el salto de línea para comunicar al servidor que ya hemos dejado de enviar información).  
+
+El patrón de comportamiento se repite para cada uno de los comanods, lo interesante es realmente analizar como procesar la respuesta de la solicitud:  
+
+````typescript
+socket.on('data', (data) => {
+  const ResponseData :ResponseType = JSON.parse(data.toString());
+  switch (ResponseData.type) {
+    case 'add':
+      if ( ResponseData.success) {
+        console.log(chalk.green(`New note added!`));
+      } else {
+        if (!ResponseData.color) {
+          console.log(chalk.red(`Problem with Color`));
+        } else {
+          console.log(chalk.red(`Note title taken!`));
+        }
+      }
+      break;
+    case 'read':
+      if ( ResponseData.success) {
+        console.log(
+            chalk.green(`Note ${ResponseData.notes![0].title} read correctly`),
+        );
+        consolelogColor(
+          ResponseData.notes![0].title,
+          ResponseData.notes![0].color!,
+          true,
+        );
+        consolelogColor(
+            `${ResponseData.notes![0].body}`,
+            `${ResponseData.notes![0].color}`,
+        );
+      } else {
+        console.log(chalk.red(`Note not found`));
+      }
+      break;
+    case 'list':
+      if ( ResponseData.success) {
+        console.log(
+            chalk.green(`Notes read correctly`),
+        );
+        console.log(
+            chalk.white.inverse(`Your notes`),
+        );
+        ResponseData.notes?.forEach((Note) => {
+          consolelogColor(Note.title, Note.color!);
+        });
+      } else {
+        console.log(chalk.red(`Notes not found`));
+      }
+      break;
+    case 'remove':
+      if ( ResponseData.success) {
+        console.log(
+            chalk.green(`Note removed!`),
+        );
+      } else {
+        console.log(chalk.red(`No note found`));
+      }
+      break;
+    default:
+      break;
+  }
+  socket.end();
+});
+````
 ## Server
 
 

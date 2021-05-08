@@ -3,11 +3,18 @@ import {Client} from './classClient';
 import {RequestType} from '../../types';
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
-
+/**
+ * @description Conexión con el servidor
+ */
 const socket = net.connect({port: 60300});
+/**
+ * @description Creación el evento Client
+ */
 const client :Client = new Client(socket);
 
-
+/**
+ * @description Evento response con la respuesta procesada
+ */
 client.on('response', (respond, error) => {
   if (!error ) {
     console.log(chalk.green(respond));
@@ -17,7 +24,9 @@ client.on('response', (respond, error) => {
   socket.end();
 });
 
-
+/**
+ * @description Agregar nota
+ */
 yargs.command({
   command: 'add',
   describe: 'Add a new note',
@@ -63,6 +72,9 @@ yargs.command({
   },
 });
 
+/**
+ * @description Leer nota
+ */
 yargs.command({
   command: 'read',
   describe: 'read note',
@@ -90,6 +102,9 @@ yargs.command({
   },
 });
 
+/**
+ * @description Listar notas del usuario
+ */
 yargs.command({
   command: 'list',
   describe: 'List notes',
@@ -110,7 +125,9 @@ yargs.command({
     }
   },
 });
-
+/**
+ * @description Remover nota de un usuario
+ */
 yargs.command({
   command: 'remove',
   describe: 'Remove note',

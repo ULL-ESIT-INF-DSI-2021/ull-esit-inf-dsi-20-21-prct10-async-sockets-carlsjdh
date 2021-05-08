@@ -1,14 +1,21 @@
 import {EventEmitter} from 'events';
 import {ResponseType} from '../../types';
 import * as chalk from 'chalk';
-
+/**
+ * Clase Client que gestiona eventos del cliente
+ */
 export class Client extends EventEmitter {
   constructor(connection: EventEmitter) {
     super();
+    /**
+     * @description Evento error
+     */
     connection.on('error', () => {
       this.emit('error', 'error del servidor');
     });
-
+    /**
+     * @description Evento para recibir la respuesta
+     */
     connection.on('data', (data) => {
       const ResponseData :ResponseType = JSON.parse(data.toString());
       switch (ResponseData.type) {
